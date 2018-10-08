@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >
+
+        <TextView
+            android:id="@+id/task_listitem_name_textview"
+            android:layout_width="205dp"
+            android:layout_height="65dp"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginStart="29dp"
+            android:layout_marginTop="27dp" />
+
+        <TextView
+            android:id="@+id/task_listitem_date_textview"
+            android:layout_width="119dp"
+            android:layout_height="64dp"
+            android:layout_alignTop="@+id/task_listitem_name_textview"
+            android:layout_toEndOf="@+id/task_listitem_name_textview"
+            android:padding="10dp"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    </RelativeLayout>
+
+</android.support.constraint.ConstraintLayout>
