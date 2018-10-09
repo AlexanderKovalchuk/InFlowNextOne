@@ -59,5 +59,10 @@ public class Task extends SugarRecord<Task> implements Serializable {
         this.state = state;
         this.creationMs = System.currentTimeMillis();
     }
+
+    @Override
+    public String toString() {
+        return  name ;
+    }
 }
 

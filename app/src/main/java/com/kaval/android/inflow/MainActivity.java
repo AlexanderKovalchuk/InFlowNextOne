@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
@@ -27,9 +28,21 @@ import android.widget.TextView;
 import com.kaval.android.inflow.Enums.TaskState;
 import com.kaval.android.inflow.model.Task;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity{
+import butterknife.BindView;
+
+public class MainActivity extends AppCompatActivity {
+
+    @BindView(R.id.action_delete)
+    MenuItem menuDelete;
+    @BindView(R.id.action_to_backlog)
+    MenuItem menuToBacklog;
+    @BindView(R.id.action_to_done)
+    MenuItem menuToDone;
+    @BindView(R.id.action_to_progress)
+    MenuItem menuToProgress;
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -71,7 +84,7 @@ public class MainActivity extends AppCompatActivity{
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(MainActivity.this, AddTaskActivity.class);
-                startActivityForResult(intent,1);
+                startActivityForResult(intent, 1);
             }
         });
 
@@ -126,15 +139,31 @@ public class MainActivity extends AppCompatActivity{
             return null;
         }
 
+//        public void refreshFragmentAdapters() {
+//            ((TaskListFragment) getItem(mViewPager.getCurrentItem())).refreshAdapter();
+//        }
+
         @Override
         public int getCount() {
             return 3;
         }
     }
 
+    //
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        List<Task> tasks = Task.listAll(Task.class);
+        if (mViewPager.getCurrentItem() == 0 || mViewPager.getCurrentItem() == 2) {
+            TaskListFragment frag1 = (TaskListFragment) mViewPager
+                    .getAdapter()
+                    .instantiateItem(mViewPager, 1);
+            frag1.updateAdapter();
+        }
+        TaskListFragment frag1 = (TaskListFragment) mViewPager
+                .getAdapter()
+                .instantiateItem(mViewPager, mViewPager.getCurrentItem());
+        frag1.updateAdapter();
+
     }
+
 }
