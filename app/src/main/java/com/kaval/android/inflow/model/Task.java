@@ -23,6 +23,8 @@ public class Task extends SugarRecord<Task> implements Serializable {
 
     TaskState state;
 
+    boolean isSelected;
+
     public String getName() {
         return name;
     }
@@ -41,6 +43,18 @@ public class Task extends SugarRecord<Task> implements Serializable {
 
     public TaskState getState() {
         return state;
+    }
+
+    public boolean isSelected() {
+        return isSelected;
+    }
+
+    public void setSelected(boolean selected) {
+        this.isSelected = selected;
+    }
+
+    public void setState(TaskState state) {
+        this.state = state;
     }
 
     public Task() {
@@ -62,7 +76,7 @@ public class Task extends SugarRecord<Task> implements Serializable {
 
     @Override
     public String toString() {
-        return  name ;
+        return name;
     }
 }
 

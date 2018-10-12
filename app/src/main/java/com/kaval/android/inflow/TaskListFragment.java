@@ -3,19 +3,23 @@ package com.kaval.android.inflow;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.ListFragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Layout;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.LinearLayout;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,16 +27,23 @@ import android.widget.Toast;
 import com.kaval.android.inflow.Enums.TaskState;
 import com.kaval.android.inflow.model.Task;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Logger;
 
 @SuppressLint("ValidFragment")
-public class TaskListFragment extends Fragment {
+public class TaskListFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
     private final TaskState state;
-    TasksAdapter adapter;
+    private TasksAdapter adapter;
+    private SwipeRefreshLayout refreshLayout;
+
 
     public TaskListFragment(TaskState state) {
         this.state = state;
@@ -41,9 +52,33 @@ public class TaskListFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-
+        EventBus.getDefault().register(this);
     }
-//
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        EventBus.getDefault().unregister(this);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(Event.MoveCurrentSelectedItemEvent event) {
+        adapter.moveSelected(event.state);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(Event.DeleteCurrentSelectedItemEvent event) {
+        adapter.deleteSelected();
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(Event.ChangeSelectedTabEvent event) {
+        if(!event.taskState.equals(state)){
+            adapter.cancelSelection();
+        }
+    }
+
+    //
 //    public static String getFormattedDateFromTimeStamp(long timestampInMilliSeconds) {
 //        Calendar cl = Calendar.getInstance();
 //        cl.setTimeInMillis(timestampInMilliSeconds);  //here your time in miliseconds
@@ -57,9 +92,10 @@ public class TaskListFragment extends Fragment {
         // Lookup the recyclerview in activity layout
         View view = inflater.inflate(R.layout.fragment_list, container, false);
         RecyclerView rvTasks = view.findViewById(R.id.rvtasks);
-
+        refreshLayout = view.findViewById(R.id.swipe_container);
+        refreshLayout.setOnRefreshListener(this);
         // Create adapter passing in the sample user data
-        adapter = new TasksAdapter(state);
+        adapter = new TasksAdapter(getContext(), state);
         // Attach the adapter to the recyclerview to populate items
         rvTasks.setAdapter(adapter);
         rvTasks.setHasFixedSize(true);
@@ -80,81 +116,19 @@ public class TaskListFragment extends Fragment {
         adapter.checkForChanges();
     }
 
-}
-
-class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.ViewHolder> {
-
-
-    private List<Task> tasks;
-    private TaskState taskState;
-
-    // Pass in the contact array into the constructor
-    public TasksAdapter(TaskState state) {
-        taskState = state;
-        tasks = Task.listAll(Task.class);
-    }
-
-
-    @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-        Context context = viewGroup.getContext();
-        LayoutInflater inflater = LayoutInflater.from(context);
-
-        // Inflate the custom layout
-        View taskView = inflater.inflate(R.layout.task_list_fragment, viewGroup, false);
-        taskView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-            }
-        });
-        // Return a new holder instance
-        ViewHolder viewHolder = new ViewHolder(taskView);
-        return viewHolder;
+    public void onRefresh() {
+        updateAdapter();
+        refreshLayout.setRefreshing(false);
     }
 
-    @Override
-    public void onBindViewHolder(@NonNull ViewHolder viewHolder, int i) {
-        // Get the data model based on position
-        Task task = tasks.get(i);
-
-        // Set item views based on your views and data model
-        TextView name = viewHolder.nameTextView;
-        name.setText(task.getName());
-        TextView descr = viewHolder.messageTextView;
-        descr.setText(task.getDescription());
-    }
-
-    @Override
-    public int getItemCount() {
-        return tasks.size();
-    }
-
-    public void checkForChanges() {
-        tasks.clear();
-        tasks.addAll(Task.listAll(Task.class));
-        notifyDataSetChanged();
-    }
-
-    // Provide a direct reference to each of the views within a data item
-    // Used to cache the views within the item layout for fast access
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        // Your holder should contain a member variable
-        // for any view that will be set as you render a row
-        public TextView nameTextView;
-        public TextView messageTextView;
-
-        // We also create a constructor that accepts the entire item row
-        // and does the view lookups to find each subview
-        public ViewHolder(View itemView) {
-            // Stores the itemView in a public final member variable that can be used
-            // to access the context from any ViewHolder instance.
-            super(itemView);
-
-            nameTextView = (TextView) itemView.findViewById(R.id.task_name);
-            messageTextView = (TextView) itemView.findViewById(R.id.task_description);
-
+    public boolean onBackPressed() {
+        if(adapter.isSelectedMODeActive()){
+            adapter.cancelSelection();
+            return true;
         }
+        return false;
     }
 }
+
+

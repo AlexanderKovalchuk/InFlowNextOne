@@ -4,6 +4,7 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Color;
 import android.support.annotation.Nullable;
+import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.TabLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -16,6 +17,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,25 +26,28 @@ import android.view.ViewGroup;
 
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.kaval.android.inflow.Enums.TaskState;
 import com.kaval.android.inflow.model.Task;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
+import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity {
 
-    @BindView(R.id.action_delete)
     MenuItem menuDelete;
-    @BindView(R.id.action_to_backlog)
     MenuItem menuToBacklog;
-    @BindView(R.id.action_to_done)
     MenuItem menuToDone;
-    @BindView(R.id.action_to_progress)
     MenuItem menuToProgress;
+    Toolbar toolbar;
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -58,13 +63,15 @@ public class MainActivity extends AppCompatActivity {
      * The {@link ViewPager} that will host the section contents.
      */
     private ViewPager mViewPager;
+    private int selectedTab = 0;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        ButterKnife.bind(this);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
@@ -77,6 +84,28 @@ public class MainActivity extends AppCompatActivity {
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
 
         mViewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+        mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int i, float v, int i1) {
+
+            }
+
+            @Override
+            public void onPageSelected(int i) {
+
+                EventBus.getDefault().post(new Event.ChangeSelectedTabEvent(TaskState.getFromPosition(i)));
+                if (selectedTab != i) {
+                    hideMenuItems();
+                }
+                selectedTab = i;
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int i) {
+
+            }
+        });
+
         tabLayout.addOnTabSelectedListener(new TabLayout.ViewPagerOnTabSelectedListener(mViewPager));
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.addNewTask);
@@ -90,10 +119,86 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private void hideMenuItems() {
+        menuDelete.setVisible(false);
+        menuToBacklog.setVisible(false);
+        menuToDone.setVisible(false);
+        menuToProgress.setVisible(false);
+        menuDelete.setVisible(false);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        EventBus.getDefault().unregister(this);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(Event.ModeChangeTaskStateEvent event) {
+        for (TaskState state : event.possibleStates) {
+            switch (state) {
+                case IN_PROGRESS:
+                    menuToProgress.setVisible(true);
+                    break;
+                case TODO:
+                    menuToBacklog.setVisible(true);
+                    break;
+                case DONE:
+                    menuToDone.setVisible(true);
+                    break;
+                default:
+                    throw new IllegalArgumentException("wrong state in possible state list:" + state);
+            }
+        }
+        menuDelete.setVisible(true);
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        menuDelete = menu.findItem(R.id.action_delete);
+        menuDelete.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                EventBus.getDefault().post(new Event.DeleteCurrentSelectedItemEvent());
+                hideMenuItems();
+                return false;
+            }
+        });
+        menuToBacklog = menu.findItem(R.id.action_to_backlog);
+        menuToBacklog.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                EventBus.getDefault().post(new Event.MoveCurrentSelectedItemEvent(TaskState.TODO));
+                hideMenuItems();
+                return false;
+            }
+        });
+        menuToDone = menu.findItem(R.id.action_to_done);
+        menuToDone.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                EventBus.getDefault().post(new Event.MoveCurrentSelectedItemEvent(TaskState.DONE));
+                hideMenuItems();
+                return false;
+            }
+        });
+        menuToProgress = menu.findItem(R.id.action_to_progress);
+        menuToProgress.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                EventBus.getDefault().post(new Event.MoveCurrentSelectedItemEvent(TaskState.IN_PROGRESS));
+                hideMenuItems();
+                return false;
+            }
+        });
         return true;
     }
 
@@ -163,7 +268,15 @@ public class MainActivity extends AppCompatActivity {
                 .getAdapter()
                 .instantiateItem(mViewPager, mViewPager.getCurrentItem());
         frag1.updateAdapter();
-
     }
 
+    @Override
+    public void onBackPressed() {
+        TaskListFragment fragment = (TaskListFragment) mViewPager
+                .getAdapter()
+                .instantiateItem(mViewPager, mViewPager.getCurrentItem());
+        if(!fragment.onBackPressed()){
+            super.onBackPressed();
+        }
+    }
 }

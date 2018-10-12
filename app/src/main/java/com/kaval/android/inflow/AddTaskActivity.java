@@ -38,6 +38,8 @@ import butterknife.OnFocusChange;
 public class AddTaskActivity extends AppCompatActivity implements TimePickerDialog.OnTimeSetListener, DatePickerDialog.OnDateSetListener {
 
     public static final String NEW_TASK = "new_task";
+    public static final String TASK_TO_SHOW = "task_to_show";
+    public static final String ADD_ACTIVITY_EDITABLE_KEY = "add_activity_editable_key";
 
     @BindView(R.id.add_task_name)
     TextInputLayout nameTV;
@@ -52,7 +54,7 @@ public class AddTaskActivity extends AppCompatActivity implements TimePickerDial
     TextView dueDateTV;
 
     Date dateRepresentation;
-
+    private boolean editable = true;
     private Menu menu;
 
     @Override
@@ -60,19 +62,43 @@ public class AddTaskActivity extends AppCompatActivity implements TimePickerDial
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_task);
         ButterKnife.bind(this);
-        nameTV.getEditText().addTextChangedListener(new TextWatcher(){
+        nameTV.getEditText().addTextChangedListener(new TextWatcher() {
             public void afterTextChanged(Editable s) {
                 //method1()
             }
-            public void beforeTextChanged(CharSequence s, int start, int count, int after){
+
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
                 //method2()
             }
-            public void onTextChanged(CharSequence s, int start, int before, int count){
+
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if (menu != null) {
                     menu.findItem(R.id.menu_done).setVisible(!nameTV.getEditText().getText().toString().isEmpty());
                 }
             }
         });
+        if (getIntent().getExtras().containsKey(ADD_ACTIVITY_EDITABLE_KEY)) {
+            editable = getIntent().getExtras().getBoolean(ADD_ACTIVITY_EDITABLE_KEY);
+            setNotEditable();
+        }
+        if (getIntent().getExtras().containsKey(TASK_TO_SHOW)) {
+            Task task = (Task) getIntent().getExtras().getSerializable(TASK_TO_SHOW);
+            fillWithTaskData(task);
+        }
+    }
+
+    private void fillWithTaskData(Task task) {
+        nameTV.getEditText().setText(task.getName());
+        descriptionTV.getEditText().setText(task.getDescription());
+        durationTV.getEditText().setText(String.valueOf(task.getDuration()));
+        dueDateTV.setText(task.getDueDate().toString());
+    }
+
+    private void setNotEditable() {
+        nameTV.getEditText().setFocusable(false);
+        descriptionTV.getEditText().setFocusable(false);
+        durationTV.getEditText().setFocusable(false);
+        dueDateTV.setFocusable(false);
     }
 
     @Override
@@ -95,7 +121,7 @@ public class AddTaskActivity extends AppCompatActivity implements TimePickerDial
         TaskBuilder builder = new TaskBuilder()
                 .setName(nameTV.getEditText().getText().toString())
                 .setDescription(descriptionTV.getEditText().getText().toString())
-                .setDuration(!durationTV.getEditText().getText().toString().isEmpty()?Long.parseLong(durationTV.getEditText().getText().toString()):-1)
+                .setDuration(!durationTV.getEditText().getText().toString().isEmpty() ? Long.parseLong(durationTV.getEditText().getText().toString()) : -1)
                 .setDueDate(dateRepresentation)
                 .setState(TaskState.TODO);
         Task task = builder.createTask();
