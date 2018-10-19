@@ -77,11 +77,11 @@ public class AddTaskActivity extends AppCompatActivity implements TimePickerDial
                 }
             }
         });
-        if (getIntent().getExtras().containsKey(ADD_ACTIVITY_EDITABLE_KEY)) {
+        if (getIntent().getExtras() != null && getIntent().getExtras().containsKey(ADD_ACTIVITY_EDITABLE_KEY)) {
             editable = getIntent().getExtras().getBoolean(ADD_ACTIVITY_EDITABLE_KEY);
             setNotEditable();
         }
-        if (getIntent().getExtras().containsKey(TASK_TO_SHOW)) {
+        if (getIntent().getExtras() != null && getIntent().getExtras().containsKey(TASK_TO_SHOW)) {
             Task task = (Task) getIntent().getExtras().getSerializable(TASK_TO_SHOW);
             fillWithTaskData(task);
         }

@@ -36,4 +36,5 @@
         android:title="@string/action_delete"
         android:visible="false"
         app:showAsAction="always" />
+
 </menu>

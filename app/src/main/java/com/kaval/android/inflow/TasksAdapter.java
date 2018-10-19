@@ -38,13 +38,13 @@ class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.ViewHolder> {
         taskState = state;
         this.context = context;
         tasks = Task.find(Task.class, "state = ?", state.toString());
-        if (state.equals(TaskState.TODO) && tasks.size() < 30) {
-            for (int i = 0; i < 30 - tasks.size(); i++) {
-                Task task = new TaskBuilder().setName("test" + i).setDescription("hallo " + i).createTask();
-                task.save();
-                tasks.add(task);
-            }
-        }
+//        if (state.equals(TaskState.TODO) && tasks.size() < 30) {
+//            for (int i = 0; i < 30 - tasks.size(); i++) {
+//                Task task = new TaskBuilder().setName("test" + i).setDescription("hallo " + i).createTask();
+//                task.save();
+//                tasks.add(task);
+//            }
+//        }
     }
 
     public boolean isSelectedMODeActive() {
@@ -70,10 +70,9 @@ class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.ViewHolder> {
         final Task task = tasks.get(i);
 
         // Set item views based on your views and data model
-        TextView name = viewHolder.nameTextView;
-        name.setText(task.getName());
-        TextView descr = viewHolder.messageTextView;
-        descr.setText(task.getDescription());
+        viewHolder.nameTextView.setText(task.getName());
+        viewHolder.messageTextView.setText(task.getDescription());
+        viewHolder.duration.setText(String.valueOf(task.getDuration()));
         viewHolder.container.setBackgroundColor(task.isSelected() ? Color.GRAY : Color.WHITE);
         viewHolder.container.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -182,6 +181,7 @@ class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.ViewHolder> {
         public TextView nameTextView;
         public TextView messageTextView;
         public LinearLayout container;
+        public TextView duration;
 
         // We also create a constructor that accepts the entire item row
         // and does the view lookups to find each subview
@@ -193,6 +193,7 @@ class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.ViewHolder> {
             nameTextView = itemView.findViewById(R.id.task_name);
             messageTextView = itemView.findViewById(R.id.task_description);
             container = itemView.findViewById(R.id.task_item_container);
+            duration = itemView.findViewById(R.id.task_duration);
         }
     }
 }

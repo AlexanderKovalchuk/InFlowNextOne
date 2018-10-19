@@ -1,0 +1,3 @@
+[submodule "range-bar-submodule"]
+	path = range-bar-submodule
+	url = https://github.com/AlexanderKovalchuk/material-range-bar.git

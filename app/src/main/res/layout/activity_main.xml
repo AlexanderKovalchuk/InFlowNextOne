@@ -27,6 +27,14 @@
 
         </android.support.v7.widget.Toolbar>
 
+        <me.zhanghai.android.materialprogressbar.MaterialProgressBar
+            android:id="@+id/time_progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            app:mpb_progressStyle="horizontal"
+            style="@style/Widget.MaterialProgressBar.ProgressBar.Horizontal" />
+
         <android.support.design.widget.TabLayout
             android:id="@+id/tabs"
             android:layout_width="match_parent"

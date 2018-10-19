@@ -1,14 +1,9 @@
 package com.kaval.android.inflow;
 
-import android.app.Dialog;
 import android.content.Intent;
-import android.graphics.Color;
 import android.support.annotation.Nullable;
-import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.TabLayout;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
@@ -17,29 +12,18 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-
-import android.widget.RelativeLayout;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import com.kaval.android.inflow.Enums.TaskState;
-import com.kaval.android.inflow.model.Task;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import butterknife.BindView;
 import butterknife.ButterKnife;
+import me.zhanghai.android.materialprogressbar.MaterialProgressBar;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -48,6 +32,8 @@ public class MainActivity extends AppCompatActivity {
     MenuItem menuToDone;
     MenuItem menuToProgress;
     Toolbar toolbar;
+    MaterialProgressBar progressBar;
+
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -96,6 +82,10 @@ public class MainActivity extends AppCompatActivity {
                 EventBus.getDefault().post(new Event.ChangeSelectedTabEvent(TaskState.getFromPosition(i)));
                 if (selectedTab != i) {
                     hideMenuItems();
+                    TaskListFragment frag1 = (TaskListFragment) mViewPager
+                            .getAdapter()
+                            .instantiateItem(mViewPager, i);
+                    frag1.updateAdapter();
                 }
                 selectedTab = i;
             }
@@ -117,6 +107,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        progressBar = findViewById(R.id.time_progress_bar);
+//        rangebar.setEnabled(true);
     }
 
     private void hideMenuItems() {
